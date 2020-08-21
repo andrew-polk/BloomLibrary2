@@ -1,8 +1,10 @@
 import { IFilter } from "../../IFilter";
 import { getConnection } from "../../connection/ParseServerConnection";
 import { axios } from "@use-hooks/axios";
-import { constructParseBookQuery } from "../../connection/LibraryQueryHooks";
-import { CachedTables } from "../../App";
+import {
+    constructParseBookQuery,
+    tagsCache,
+} from "../../connection/LibraryQueryHooks";
 
 export async function ChangeColumnValueForAllBooksInFilter(
     filter: IFilter,
@@ -10,7 +12,7 @@ export async function ChangeColumnValueForAllBooksInFilter(
     columnName: string,
     refresh: () => void
 ) {
-    const finalParams = constructParseBookQuery({}, filter, CachedTables.tags);
+    const finalParams = constructParseBookQuery({}, filter, tagsCache);
     const headers = getConnection().headers;
     const books = await axios.get(`${getConnection().url}classes/books`, {
         headers,
@@ -46,7 +48,7 @@ export async function AddTagAllBooksInFilter(
     newTag: string,
     refresh: () => void
 ) {
-    const finalParams = constructParseBookQuery({}, filter, CachedTables.tags);
+    const finalParams = constructParseBookQuery({}, filter, tagsCache);
     const headers = getConnection().headers;
     const books = await axios.get(`${getConnection().url}classes/books`, {
         headers,
@@ -94,7 +96,7 @@ export async function AddBookshelfToAllBooksInFilter(
     newBookshelf: string,
     refresh: () => void
 ) {
-    const finalParams = constructParseBookQuery({}, filter, CachedTables.tags);
+    const finalParams = constructParseBookQuery({}, filter, tagsCache);
     const headers = getConnection().headers;
     const books = await axios.get(`${getConnection().url}classes/books`, {
         headers,

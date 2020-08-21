@@ -3,8 +3,7 @@ import { IFilter, InCirculationOptions } from "../IFilter";
 import { getConnection } from "./ParseServerConnection";
 import { getBloomApiUrl } from "./ApiConnection";
 import { Book, createBookFromParseServerData } from "../model/Book";
-import { useContext, useMemo, useEffect, useState } from "react";
-import { CachedTablesContext } from "../App";
+import { useMemo, useEffect, useState } from "react";
 import { getCleanedAndOrderedLanguageList, ILanguage } from "../model/Language";
 import { processRegExp } from "../Utilities";
 import { kTopicList } from "../model/ClosedVocabularies";
@@ -12,7 +11,11 @@ import { IStatsProps } from "../components/statistics/StatsInterfaces";
 import { toYyyyMmDd } from "../components/statistics/ReaderSessionsChart";
 
 // For things other than books, which should use `useBookQuery()`
-function useLibraryQuery(queryClass: string, params: {}): IReturns<any> {
+function useLibraryQuery(
+    queryClass: string,
+    params: {},
+    doNotActuallyRunQuery: boolean = false
+): IReturns<any> {
     return useAxios({
         url: `${getConnection().url}classes/${queryClass}`,
         method: "GET",
@@ -21,38 +24,71 @@ function useLibraryQuery(queryClass: string, params: {}): IReturns<any> {
             headers: getConnection().headers,
             params,
         },
+        // A hack to get around rules of hooks which say we cannot call a hook conditionally
+        forceDispatchEffect: () => !doNotActuallyRunQuery,
     });
 }
-function useGetLanguagesList() {
-    return useLibraryQuery("language", {
-        keys: "name,englishName,usageCount,isoCode",
-        limit: 10000,
-        order: "-usageCount",
-    });
+function useGetLanguagesList(doNotActuallyRunQuery: boolean = false) {
+    return useLibraryQuery(
+        "language",
+        {
+            keys: "name,englishName,usageCount,isoCode",
+            limit: 10000,
+            order: "-usageCount",
+        },
+        doNotActuallyRunQuery
+    );
 }
+let cleanedAndOrderedLanguageListCache: ILanguage[] = [];
+let languageCacheRequested: boolean = false;
 export function useGetCleanedAndOrderedLanguageList(): ILanguage[] {
-    const axiosResult = useGetLanguagesList();
+    const runQuery = !languageCacheRequested;
+    languageCacheRequested = true;
+
+    if (runQuery) console.log("about to run query");
+    const axiosResult = useGetLanguagesList(!runQuery);
+
+    if (!runQuery) return cleanedAndOrderedLanguageListCache;
+
+    console.log("about to check result");
     if (axiosResult.response?.data?.results) {
-        return getCleanedAndOrderedLanguageList(
+        cleanedAndOrderedLanguageListCache = getCleanedAndOrderedLanguageList(
             axiosResult.response.data.results
         );
+        return cleanedAndOrderedLanguageListCache;
+    } else {
+        console.log(axiosResult);
     }
 
     return [];
 }
+
+// exported for contexts which can't use hooks
+export let tagsCache: string[] = [];
+let tagsCacheRequested: boolean = false;
 export function useGetTagList(): string[] {
-    const axiosResult = useLibraryQuery("tag", {
-        limit: 1000,
-        count: 1000,
-        order: "name",
-    });
+    const runQuery = !tagsCacheRequested;
+    tagsCacheRequested = true;
+
+    const axiosResult = useLibraryQuery(
+        "tag",
+        {
+            limit: 1000,
+            count: 1000,
+            order: "name",
+        },
+        !runQuery
+    );
+
+    if (!runQuery) return tagsCache;
 
     if (axiosResult.response?.data?.results) {
-        return axiosResult.response.data.results.map(
+        tagsCache = axiosResult.response.data.results.map(
             (parseTag: { name: string }) => {
                 return parseTag.name;
             }
         );
+        return tagsCache;
     }
     return [];
 }
@@ -61,19 +97,36 @@ export function useGetTopicList() {
     return useLibraryQuery("tag", { limit: 1000, count: 1000 });
 }
 
+// Basically a map from category to IBookshelfResult[]
+const bookshelvesByCategoryCache: any = {};
 export function useGetBookshelvesByCategory(
     category?: string
 ): IBookshelfResult[] {
-    const axiosResult = useLibraryQuery("bookshelf", {
-        where: category ? { category } : null,
-        //,keys: "englishName,key"
-    });
-    if (axiosResult.response?.data?.results) {
-        const fullBookShelfDescriptions = axiosResult.response.data
-            .results as IBookshelfResult[];
+    const categoryKey = category || "";
 
-        return fullBookShelfDescriptions;
-    } else return [];
+    let haveCachedValues = false;
+    if (bookshelvesByCategoryCache[categoryKey]) {
+        haveCachedValues = true;
+    }
+
+    const axiosResult = useLibraryQuery(
+        "bookshelf",
+        {
+            where: category ? { category } : null,
+            //,keys: "englishName,key"
+        },
+        haveCachedValues
+    );
+
+    if (haveCachedValues) return bookshelvesByCategoryCache[categoryKey];
+
+    if (axiosResult.response?.data?.results) {
+        bookshelvesByCategoryCache[categoryKey] = axiosResult.response.data
+            .results as IBookshelfResult[];
+        return bookshelvesByCategoryCache[categoryKey];
+    }
+
+    return [];
 }
 
 export function useGetLanguageInfo(language: string): ILanguage[] {
@@ -249,7 +302,7 @@ export function useGetBooksForGrid(
     sortingArray: Array<{ columnName: string; descending: boolean }>
 ): IGridResult {
     //console.log("Sorts: " + sortingArray.map(s => s.columnName).join(","));
-    const { tags } = useContext(CachedTablesContext);
+    const tags = useGetTagList();
     const [result, setResult] = useState<IGridResult>({
         onePageOfMatchingBooks: [],
         totalMatchingBooksCount: 0,
@@ -338,7 +391,7 @@ function useBookQueryInternal(
     skip?: number, //pagination
     doNotActuallyRunQuery?: boolean
 ): IAxiosAnswer {
-    const { tags } = useContext(CachedTablesContext);
+    const tags = useGetTagList();
     const axiosParams = makeBookQueryAxiosParams(
         params,
         filter,

@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { IFilter } from "../IFilter";
-import { CachedTablesContext } from "../App";
 import { getDisplayNamesForLanguage } from "../model/Language";
 import {
     useSearchBooks,
     IBasicBookInfo,
+    useGetCleanedAndOrderedLanguageList,
 } from "../connection/LibraryQueryHooks";
 import { BookGroup } from "./BookGroup";
 
@@ -83,7 +83,7 @@ export const ByLanguageGroups: React.FunctionComponent<{
             reportBooksAndLanguages(totalBookCount, langCount);
         }
     }, [totalBookCount, langCount, reportBooksAndLanguages, waiting]);
-    const { languagesByBookCount } = useContext(CachedTablesContext);
+    const languagesByBookCount = useGetCleanedAndOrderedLanguageList();
     const languages = useMemo(
         () =>
             languagesByBookCount

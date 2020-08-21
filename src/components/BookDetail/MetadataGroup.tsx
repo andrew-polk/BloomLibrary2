@@ -4,7 +4,7 @@ import css from "@emotion/css/macro";
 import { jsx } from "@emotion/core";
 /** @jsx jsx */
 
-import React, { useContext } from "react";
+import React from "react";
 import { Book } from "../../model/Book";
 import { observer } from "mobx-react";
 import { LicenseLink } from "./LicenseLink";
@@ -13,9 +13,11 @@ import titleCase from "title-case";
 import { Link, useTheme } from "@material-ui/core";
 import { commonUI } from "../../theme";
 import { BookStats } from "./BookStats";
-import { CachedTablesContext } from "../../App";
 import { getTagDisplayName } from "../../model/Tag";
-import { useGetRelatedBooks } from "../../connection/LibraryQueryHooks";
+import {
+    useGetRelatedBooks,
+    useGetBookshelvesByCategory,
+} from "../../connection/LibraryQueryHooks";
 import { Bookshelf } from "../../model/Bookshelf";
 import { KeywordLinks } from "./KeywordLinks";
 import { getAnchorProps } from "../../embedded";
@@ -25,7 +27,7 @@ export const MetadataGroup: React.FunctionComponent<{
     book: Book;
     breakToColumn: string;
 }> = observer((props) => {
-    const { bookshelves } = useContext(CachedTablesContext);
+    const bookshelves = useGetBookshelvesByCategory();
     const relatedBooks = useGetRelatedBooks(props.book.id);
     const theme = useTheme();
     return (

@@ -11,13 +11,6 @@ import theme from "./theme";
 import { ThemeProvider, Snackbar } from "@material-ui/core";
 import { LoginDialog } from "./components/User/LoginDialog";
 import {
-    useGetTagList,
-    useGetCleanedAndOrderedLanguageList,
-    IBookshelfResult,
-    useGetBookshelvesByCategory,
-} from "./connection/LibraryQueryHooks";
-import { ILanguage } from "./model/Language";
-import {
     OSFeaturesContext,
     bloomDesktopAvailable,
     bloomReaderAvailable,
@@ -29,36 +22,11 @@ import { Header } from "./components/header/Header";
 import { Routes } from "./components/Routes";
 import { Footer } from "./components/Footer";
 import { IntlProvider } from "react-intl";
-
 import { useGetLocalizations } from "./GetLocalizations";
-interface ICachedTables {
-    tags: string[];
-    languagesByBookCount: ILanguage[];
-    bookshelves: IBookshelfResult[];
-}
-// for use when we aren't in a react context with hooks
-export const CachedTables: ICachedTables = {
-    tags: [],
-    languagesByBookCount: [],
-    bookshelves: [],
-};
-
-export const CachedTablesContext = React.createContext<ICachedTables>({
-    tags: [],
-    languagesByBookCount: [],
-    bookshelves: [],
-});
 
 //console.log("getUserLanguageFromBrowser() " + getUserLanguageFromBrowser());
 
 export const App: React.FunctionComponent<{}> = (props) => {
-    const tags = useGetTagList();
-    const languagesByBookCount = useGetCleanedAndOrderedLanguageList();
-    const bookshelves = useGetBookshelvesByCategory();
-    CachedTables.bookshelves = bookshelves;
-    CachedTables.tags = tags;
-    CachedTables.languagesByBookCount = languagesByBookCount;
-
     const embeddedMode = window.self !== window.top;
 
     const showUnderConstruction =
@@ -133,39 +101,31 @@ export const App: React.FunctionComponent<{}> = (props) => {
         See also https://github.com/facebook/react/issues/16362
 */}
                 <ThemeProvider theme={theme}>
-                    <CachedTablesContext.Provider
+                    <OSFeaturesContext.Provider
                         value={{
-                            tags,
-                            languagesByBookCount,
-                            bookshelves,
+                            bloomDesktopAvailable,
+                            bloomReaderAvailable,
+                            cantUseBloomD,
+                            mobile,
                         }}
                     >
-                        <OSFeaturesContext.Provider
-                            value={{
-                                bloomDesktopAvailable,
-                                bloomReaderAvailable,
-                                cantUseBloomD,
-                                mobile,
-                            }}
-                        >
-                            {showUnderConstruction && <UnderConstruction />}
+                        {showUnderConstruction && <UnderConstruction />}
 
-                            <Router>
-                                {embeddedMode || <Header />}
-                                {/* This div takes up all the space available so that the footer
+                        <Router>
+                            {embeddedMode || <Header />}
+                            {/* This div takes up all the space available so that the footer
                                 is either at the bottom or pushed off screen */}
-                                <div
-                                    id="expandableContent"
-                                    css={css`
-                                        flex: 1 0 auto;
-                                    `}
-                                >
-                                    <Routes />
-                                </div>
-                                {embeddedMode || <Footer />}
-                            </Router>
-                        </OSFeaturesContext.Provider>
-                    </CachedTablesContext.Provider>
+                            <div
+                                id="expandableContent"
+                                css={css`
+                                    flex: 1 0 auto;
+                                `}
+                            >
+                                <Routes />
+                            </div>
+                            {embeddedMode || <Footer />}
+                        </Router>
+                    </OSFeaturesContext.Provider>
                 </ThemeProvider>
                 {embeddedMode || <LoginDialog />} {/* </React.StrictMode> */}
             </div>

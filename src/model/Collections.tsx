@@ -1,11 +1,10 @@
-import { useContext } from "react";
 import { getDisplayNamesFromLanguageCode, ILanguage } from "./Language";
-import { CachedTablesContext } from "../App";
 import { ICollection } from "./ContentInterfaces";
 import { convertContentfulCollectionToICollection } from "./Contentful";
 import { kTopicList } from "./ClosedVocabularies";
 import { strict as assert } from "assert";
 import { useContentful } from "../connection/UseContentful";
+import { useGetCleanedAndOrderedLanguageList } from "../connection/LibraryQueryHooks";
 
 /* From original design: Each collection has
     id
@@ -37,7 +36,7 @@ interface IContentfulCollectionQueryResponse {
 export function useGetCollection(
     collectionName: string
 ): IContentfulCollectionQueryResponse {
-    const { languagesByBookCount: languages } = useContext(CachedTablesContext);
+    const languages = useGetCleanedAndOrderedLanguageList();
 
     // We have template collections for everything, and then also we can provide
     // override collections for any value. E.g. our query will first look for a

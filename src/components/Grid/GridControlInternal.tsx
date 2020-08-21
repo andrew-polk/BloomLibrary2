@@ -3,13 +3,7 @@ import css from "@emotion/css/macro";
 // these two lines make the css prop work on react elements
 import { jsx } from "@emotion/core";
 /** @jsx jsx */
-import React, {
-    useState,
-    useEffect,
-    useMemo,
-    ReactText,
-    useContext,
-} from "react";
+import React, { useState, useEffect, useMemo, ReactText } from "react";
 
 import {
     Plugin,
@@ -34,6 +28,7 @@ import {
 import {
     useGetBookCount,
     useGetBooksForGrid,
+    useGetCleanedAndOrderedLanguageList,
 } from "../../connection/LibraryQueryHooks";
 
 import {
@@ -55,7 +50,6 @@ import StaffPanel from "../Admin/StaffPanel";
 import { useGetLoggedInUser } from "../../connection/LoggedInUser";
 import { observer } from "mobx-react";
 import { IGridControlProps } from "./GridControl";
-import { CachedTablesContext } from "../../App";
 import { ILanguage } from "../../model/Language";
 import matchSorter from "match-sorter";
 
@@ -63,9 +57,7 @@ import matchSorter from "match-sorter";
 const GridControlInternal: React.FunctionComponent<IGridControlProps> = observer(
     (props) => {
         const theme = useTheme();
-        const { languagesByBookCount: languages } = useContext(
-            CachedTablesContext
-        );
+        const languages = useGetCleanedAndOrderedLanguageList();
         const user = useGetLoggedInUser();
         const kBooksPerGridPage = 20;
         const [gridFilters, setGridFilters] = useState<GridFilter[]>(

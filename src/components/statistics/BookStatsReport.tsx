@@ -13,13 +13,13 @@ import {
 } from "@devexpress/dx-react-grid-material-ui";
 import { SortingState, IntegratedSorting } from "@devexpress/dx-react-grid";
 import { IGridColumn } from "../Grid/GridColumns";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { IStatsProps } from "./StatsInterfaces";
 import { useGetBookStats } from "./useGetBookStats";
 import { useProvideDataForExport } from "./exportData";
-import { CachedTablesContext } from "../../App";
 import { getDisplayNamesFromLanguageCode } from "../../model/Language";
 import { useIntl } from "react-intl";
+import { useGetCleanedAndOrderedLanguageList } from "../../connection/LibraryQueryHooks";
 
 export const BookStatsReport: React.FunctionComponent<IStatsProps> = (
     props
@@ -27,7 +27,7 @@ export const BookStatsReport: React.FunctionComponent<IStatsProps> = (
     const l10n = useIntl();
     const stats = useGetBookStats(props);
     useProvideDataForExport(stats, props);
-    const { languagesByBookCount: languages } = useContext(CachedTablesContext);
+    const languages = useGetCleanedAndOrderedLanguageList();
 
     if (stats) {
         for (const stat of stats) {

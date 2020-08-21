@@ -1,19 +1,21 @@
 import { Book } from "../../model/Book";
-import React, { useContext } from "react";
-import { CachedTablesContext } from "../../App";
+import React from "react";
 
 import { featureSpecs } from "../FeatureHelper";
 import { commonUI } from "../../theme";
 import { MultiChooser } from "./MultiChooser";
 import { CreatableMultiChooser } from "./CreatableMultiChooser";
+import {
+    useGetTagList,
+    useGetCleanedAndOrderedLanguageList,
+    useGetBookshelvesByCategory,
+} from "../../connection/LibraryQueryHooks";
 
 export const BookshelvesChooser: React.FunctionComponent<{
     book: Book;
     setModified: (modified: boolean) => void;
 }> = (props) => {
-    const { bookshelves: availableBookshelves } = useContext(
-        CachedTablesContext
-    );
+    const availableBookshelves = useGetBookshelvesByCategory();
     const bookshelfKeys = availableBookshelves.map((b) => b.key).sort();
     return (
         <MultiChooser
@@ -59,9 +61,7 @@ export const BookLanguagesChooser: React.FunctionComponent<{
     book: Book;
     setModified: (modified: boolean) => void;
 }> = (props) => {
-    const { languagesByBookCount: availableLanguages } = useContext(
-        CachedTablesContext
-    );
+    const availableLanguages = useGetCleanedAndOrderedLanguageList();
 
     return (
         <MultiChooser
@@ -83,7 +83,7 @@ export const TagsChooser: React.FunctionComponent<{
     book: Book;
     setModified: (modified: boolean) => void;
 }> = (props) => {
-    const { tags: tagChoices } = useContext(CachedTablesContext);
+    const tagChoices = useGetTagList();
     const tagStyles = [
         {
             match: /^topic:/,

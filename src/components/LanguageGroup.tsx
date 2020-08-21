@@ -4,21 +4,21 @@ import css from "@emotion/css/macro";
 import { jsx } from "@emotion/core";
 /** @jsx jsx */
 
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { LanguageCard } from "./LanguageCard";
 import Downshift, { GetItemPropsOptions } from "downshift";
 import matchSorter from "match-sorter";
 import searchIcon from "../search.png";
-import { CachedTablesContext } from "../App";
 import { ILanguage } from "../model/Language";
 import { commonUI } from "../theme";
 import { CardSwiper } from "./CardSwiper";
 import { Redirect } from "react-router-dom";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useGetCleanedAndOrderedLanguageList } from "../connection/LibraryQueryHooks";
 
 export const LanguageGroup: React.FunctionComponent = () => {
     const l10n = useIntl();
-    const { languagesByBookCount: languages } = useContext(CachedTablesContext);
+    const languages = useGetCleanedAndOrderedLanguageList();
     // setting this to a language code causes a <Redirect> to render and open the page
     // for that code (currently when the user has selected a language by typing and pressing Enter)
     const [langChosen, setLangChosen] = useState("");

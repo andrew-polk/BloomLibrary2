@@ -1,16 +1,16 @@
-import React, { useContext } from "react";
+import React from "react";
 import { observer } from "mobx-react";
 import { FilterHolder } from "./BulkEditPage";
 import { BulkEditPanel } from "./BulkEditPanel";
 import { AddBookshelfToAllBooksInFilter } from "./BulkChangeFunctions";
-import { CachedTablesContext } from "../../App";
+import { useGetBookshelvesByCategory } from "../../connection/LibraryQueryHooks";
 
 export const AddBookshelfPanel: React.FunctionComponent<{
     filterHolder: FilterHolder;
     refresh: () => void;
     backgroundColor: string;
 }> = observer((props) => {
-    const { bookshelves } = useContext(CachedTablesContext);
+    const bookshelves = useGetBookshelvesByCategory();
     return (
         <BulkEditPanel
             choices={bookshelves.map((b) => b.key)}
